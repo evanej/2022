@@ -1,0 +1,160 @@
+---
+title: "API Call in R"
+output: html_notebook
+---
+
+### US Patents Office 
+
+```{r}
+# install.packages("patentsview")
+# this is a package someone created for calling a US Patent API 
+library(patentsview)
+```
+
+The main thing with API calls is that now you're using a specific query based language for the platform, rather than just R. Therefore, the syntax will look different. For the US Patents API, this is the PatentsView Query Language. This uses a JSON-based syntax.
+
+You can read more here: https://patentsview.org/apis/api-query-language
+
+More about the R package:
+- there is one main function (search_pv()) that sends requests to the API 
+- there are two parameters in this function: query, which tells the API how you want to filter the patents data, and fields, which tells the function which fields you want to retrieve
+
+## Looking what happens with the default value for fields
+
+```{r}
+#?qry_funs
+# this tells you more about the functions.
+qry_1 = qry_funs$gt(patent_year = 2010)
+qry_1 
+# qry funs are a list of functions that make it easy to work with PatentView. There are 14 of them.
+
+b = search_pv(query = qry_1, fields = NULL)
+
+# default for fields gives you patent_id, patent_number, and patent_title 
+```
+
+## Now trying different values for fields 
+
+```{r}
+search_pv(
+  query = qry_funs$gt(patent_year = 2010),
+  fields = c("patent_abstract",
+             "inventor_first_name")
+)
+
+# you can do more fields or choose different ones, these are just an example 
+```
+
+```{r}
+#?search_pv
+# this gives you a vector of fields that you can retrieve 
+a = search_pv(
+  query = qry_funs$gt(patent_year = 2010),
+  fields = get_fields(endpoint = "patents", groups = c("patents", "inventors")))
+# add parameters all_pages = TRUE to read all patents, default is 25 
+
+# can also use the get_fields function 
+# you can see that we are getting a lot more information about each patent 
+x = data.frame(a$data$patents)
+x
+
+# issue with list type 
+
+df <- apply(x,2,as.character)
+# changed the list type to a character type
+
+write.csv(df,"/Users/katieforester/Desktop/example.csv", row.names = FALSE)
+# can handle a character type, not a list type 
+```
+
+## These are just basics, let's look at an example 
+
+This is from an example I found online of how someone (Chris Baker, R Blogger) used the patent API in order to see where patents were coming from geographically. Here's his example. 
+
+```{r}
+# this chunk is what we learned above 
+
+# reminder that for any function you're using, you can always put a ? mark in front of it to search it's use and parameters. This will be useful when you want to use these functions with different parameters in the future
+
+library(patentsview)
+
+# Write a query:
+query <- with_qfuns( # with_qfuns is basically just: with(qry_funs, ...)
+  and(
+    begins(cpc_subgroup_id = 'H04L63/02'),
+    # looking at a specific subgroup of patents
+    gte(patent_year = 2007)
+    # patent year awarded 
+  )
+)
+# Create a list of fields:
+fields <- c(
+  c("patent_number", "patent_year"),
+  get_fields(endpoint = "patents", groups = c("assignees", "cpcs"))
+)
+# Send HTTP request to API's server:
+pv_res <- search_pv(query = query, fields = fields, all_pages = TRUE)
+# this actually queries the API to pull the patent data 
+```
+
+
+```{r}
+library(leaflet)
+library(htmltools)
+library(dplyr)
+library(tidyr)
+
+data <-
+  pv_res$data$patents %>%
+  # calling the patent dataframe 
+  # using dplyr pipe, so this is the data we want 
+    unnest(assignees) %>%
+  # essentially ungroup the assignees so we can get all the selected variables below 
+    select(assignee_id, assignee_organization, patent_number,
+           assignee_longitude, assignee_latitude) %>%
+  # select these variables 
+    group_by_at(vars(-matches("pat"))) %>%
+  # looks at all matches of the function, so we're grouping by the selected variables except those starting with pat 
+  # group_by these variables 
+    mutate(num_pats = n()) %>%
+  # create a new column called number of patents that counts the number 
+    ungroup() %>%
+    select(-patent_number) %>%
+  # deselect the number of patents 
+    distinct() %>%
+  # extract distinct rows by number of variables 
+    mutate(popup = paste0("<font color='Black'>",
+                          htmlEscape(assignee_organization), "<br><br>Patents:",
+                          num_pats, "</font>")) %>%
+  # this is just setting color settings for the map graph 
+    mutate_at(vars(matches("_l")), as.numeric) %>%
+  # make numeric variables 
+    filter(!is.na(assignee_id))
+  # get rid of any missing values 
+
+leaflet(data) %>%
+  # this is a graphical function 
+  addProviderTiles(providers$CartoDB.DarkMatterNoLabels) %>%
+  addCircleMarkers(lng = ~assignee_longitude, lat = ~assignee_latitude,
+                   popup = ~popup, ~sqrt(num_pats), color = "yellow")
+```
+
+
+### Crunchbase
+
+Again, for crunchbase, another individual has already created a more user friendly package for R that lets you query the API. 
+
+I had an issue getting an API key, so I couldn't query it. This website looks like it has some useful info though:
+
+https://blog.revolutionanalytics.com/2015/02/rcrunchbase-an-api-interface-to-crunchbase.html
+https://data.crunchbase.com/v3.1/docs/using-the-api
+
+
+```{r}
+install.packages("rcrunchbase")
+```
+
+
+
+
+

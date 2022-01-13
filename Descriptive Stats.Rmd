@@ -1,0 +1,253 @@
+---
+title: "Descriptive Stats"
+output:
+  html_document:
+    df_print: paged
+---
+ 
+## Upload dataset 
+
+```{r}
+library(AmesHousing)
+ames = make_ames()
+
+ames 
+```
+
+```{r}
+head(ames)
+# gives first six observations 
+# good for checking that all variables you want are in data set and for looking at type of variables 
+```
+
+```{r}
+str(ames)
+# gives you the structure of the data 
+# Data types - how the data are stored in R
+# Levels are categories
+```
+
+
+## Min and Max of data 
+
+```{r}
+# use $ and variable name
+min(ames$Lot_Frontage)
+max(ames$Lot_Frontage)
+ames
+```
+
+## Range 
+
+```{r}
+range(ames$Lot_Area)
+```
+
+## Mean 
+
+```{r}
+mean(ames$Lot_Area)
+```
+
+## Median 
+
+```{r}
+median(ames$Lot_Area)
+```
+
+```{r}
+## can also use quantile function
+quantile(ames$Lot_Area, 0.5)
+quantile(ames$Lot_Area, 0.25)
+# can do with any quartiles 
+```
+ 
+## Interquartile Range 
+
+```{r}
+# difference between first and third quartiles
+IQR(ames$Lot_Area)
+```
+
+## Standard Dev and Variance 
+
+```{r}
+sd(ames$Lot_Area)
+var(ames$Lot_Area)
+```
+
+```{r}
+## can also apply to multiple columns 
+
+# can also try : ames[,c(“lot_area”,”lot_frontage")
+
+
+lapply(ames[, 3:4], sd)
+# remember that lapply function applies a specific function to data --> i.e. (data you want, function you want)
+```
+
+## Really helpful summary function
+
+```{r}
+summary(ames[, 3:4])
+```
+
+## Mode 
+
+Unfortunately, there is no function in R to find the mode of a variable (that I know of). Here's one way I know of to do it.
+
+```{r}
+table_ames <- table(ames$Lot_Area) # number of occurrences for each unique value
+sort(table_ames, decreasing = TRUE) # sort highest to lowest
+
+# although the printout is long, we can see that the mode for lot area is 9600
+```
+
+## Counts 
+
+```{r}
+summary(ames$Bldg_Type)
+# gives you the number of each factor in the data 
+```
+
+## Conditional Counts for Nominal/Ordinal Variables
+
+```{r}
+# lets say we want to count the number of each "paved"
+summary(ames$Paved_Drive)
+
+# another way to count the number of paved 
+sum(ames$Paved_Drive == "Paved")
+
+# or condition 
+sum(ames$Paved_Drive == "Paved" | ames$Paved_Drive == "Dirt_Gravel")
+
+# and condition 
+
+sum(ames$Paved_Drive == "Paved" & ames$Paved_Drive == "Dirt_Gravel")
+sum(ames$Paved_Drive == "Paved" & ames$Alley == "No_Alley_Access")
+
+```
+
+## Conditional Counts for Numeric Variables 
+
+```{r}
+# find the number of lots greater than 1000
+sum(ames$Lot_Area > 1000, na.rm=TRUE)
+# na.rm = TRUE removes missing values for you 
+```
+
+```{r}
+# find the number of lots between 1000 and 2000
+sum(ames$Lot_Area > 1000 & ames$Lot_Area < 2000, na.rm=TRUE)
+```
+
+```{r}
+library(dplyr)
+ames2 = ames %>% mutate(filtered_area = ifelse(Lot_Area > 10000 & Lot_Area < 20000, 1, 0))%>%select(filtered_area, everything())
+
+ames2
+# now we have a variable at the end of our data set with this condition present 
+```
+```{r}
+library(dplyr)
+ames2 = ames %>% mutate(filtered_area = ifelse(Lot_Area > 10000 & Lot_Area < 20000, 1, 0))%>%filter(filtered_area ==1)
+ames2
+# now we have a variable at the end of our data set with this condition present
+```
+
+## Barplot 
+
+```{r}
+barplot(table(ames$Lot_Shape)) # table() is mandatory
+# really basic automatic barplot in R 
+```
+
+```{r}
+# more fancy, customizable barplot in R
+library(ggplot2)
+
+ggplot(ames, aes(x = Lot_Shape, fill = Lot_Shape)) +
+  geom_bar() +
+  ggtitle("Lot Shape of Houses in Ames") +
+  xlab("Lot Shape") + ylab("Number of Houses")
+  
+```
+
+## Line Plot 
+
+```{r}
+plot(ames$Lot_Area,
+  type = "l"
+) # "l" for line
+```
+
+## Histogram 
+
+```{r}
+hist(ames$Lot_Frontage)
+```
+
+```{r}
+## can do same in ggplot 
+ggplot(ames) +
+  aes(x = Lot_Frontage) +
+  geom_histogram(bins = 15)
+# can change number of bins 
+```
+
+## Boxplot 
+
+```{r}
+boxplot(ames$Lot_Frontage)
+```
+
+```{r}
+# side by side comparison of numerical to categorical 
+boxplot(ames$Lot_Frontage ~ ames$Alley)
+```
+
+```{r}
+ggplot(ames) +
+  aes(x = Alley, y = Lot_Frontage) +
+  geom_boxplot()
+```
+
+## Scatterplot 
+
+
+```{r}
+ames
+plot(ames$Lot_Area, ames$Gr_Liv_Area)
+```
+
+```{r}
+ggplot(ames) +
+  aes(x = ames$Lot_Area, y = ames$Gr_Liv_Area) +
+  geom_point()
+```
+```{r}
+# add in a categorical factor for more info 
+ggplot(ames) +
+  aes(x = ames$Lot_Area, y = ames$Gr_Liv_Area, color = Alley) +
+  geom_point() +
+  scale_color_hue()
+```
+
+## QQplot for Normality Assumptions 
+
+```{r}
+# Draw points on the qq-plot:
+qqnorm(ames$Lot_Area)
+# Draw the reference line:
+qqline(ames$Lot_Area)
+```
+
+We can see that this deviates a lot from normality (the theoretical line of normal data), so this normality assumption would be broken. 
+
+## Density plots for distribution 
+
+```{r}
+plot(density(ames$Lot_Area))
+```
+
