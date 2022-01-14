@@ -1,0 +1,168 @@
+---
+title: "Week 1 - Intro to R, R Studio, and R Markdown"
+author: "Prof. Hsu"
+date: "06/01/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Week 1 - Introduction to R, R Studio, and R Markdown 
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. If you haven't read Ismay and Kennedy's introduction to R Markdown yet, I would advise you to take a look before proceeding. Ismay and Kennedy. Getting Used to R, R Studio, and R Markdown. (2021). [Ch. 1.4 - Introduction to R Markdown](https://rbasics.netlify.app/4-rmarkdown.html). You can treat the white space here similar to a text editor. Refer to Ismay and Kennedy for formatting tricks, such as the use of hashtags for headers, asterisks for horizontal lines, and other formatting.
+
+Here are a few common formatting syntax:
+*italic*  or _italic_
+**bold**   __bold__
+`code`
+superscript^2^ and subscript~2~
+
+The coolest part about R Markdown is that it allows you to 'Knit' an output document (e.g., HTML or PDF) that will produce a notebook of code chunks and output. A chunk of R code is designated by the ``` and in grey. You can give names to these chunks, like below, i've titled the first chunk 'intro'. 
+
+```{r intro}
+print("Here is a chunk of R code")
+
+```
+**Question**
+What's the difference between the R Console and R Script? 
+
+## Getting familiar with coding in R
+Here, we'll get familiar with R by practicing a few ways in which you can use R. 
+- As a calculator
+- Creating new variables
+- Calling functions (or even coding your own)
+- Conditionals
+- Vectors
+- Using packages
+
+```{r}
+# as a calculator - these commands can be typed in the script or in the console directly. Just remember that whatever is typed in the console isn't saved.
+1+1
+2^10
+5*6
+
+# Creating new variables using the assignment operator. Encourage them not to use `=`
+x <- 1+1 
+dog <- "brown"
+dog <- "white"
+
+# Calling functions
+max(3,5,6)
+
+# Conditions
+y <- 1+2
+x > y
+
+# Vectors - object in R that can store multiple values 
+grades <- c(85, 90, 78, 50)
+grades[3]
+grades + x
+
+```
+**Question**
+What's the difference between `=` and `==` in R?
+
+HW: Some practice  
+In the R code chunk below:  
+1. Create a variable called `x` and assign it a value that is the sum of 3+4. Print x to verify that the variable has been stored correctly. Where else can you check to be sure?  
+2. Now create a vector called y of several values -  3,4,5,8,7. Print y to verify that the vector has been stored correctly.  
+3. How would you determine what the value is of the third element of vector `y`?  
+4. What happens when you add x and y together?  
+5. What is the result of `x > y`?  
+```{r}
+# 1
+x <- 3+4
+x
+
+# 2
+y <- c(3,4,5,8,7)
+y
+
+# 3
+y[3]
+
+# 4
+x+y # adds 7 to each element in vector y
+
+# 5
+x > y # compares x with each element in y
+```
+
+## Dataframes 
+In R the most common way to store we data is in a called a “data frame”. We create a data frame with the function data.frame(). Let's see an example:
+```{r}
+students <- c("Sally", "Tom", "Brian", "Aisha", "Mario")
+ages <- c(18, 22, 19, 18, 21)
+
+data.frame(students=c("Sally", "Tom", "Brian", "Aisha", "Mario"), 
+           ages = c(18, 22, 19, 18, 21))
+class <- data.frame(students=c("Sally", "Tom", "Brian", "Aisha", "Mario"), 
+           ages = c(18, 22, 19, 18, 21))
+class$location <- c(1,2,3,4,5)
+
+```
+**Question**
+Describe the differences between the two chunks of code above. Is there a another way we could've created the data frame?  
+
+HW: Some practice  
+In the R chunk below:  
+1. Store the data frame above into a variable called `student.ages`  
+2. How would you determine the age of the fourth student?  
+3. Add a new column `gender` to the data frame with the students' gender identities, which are: Female, Male, Male, Female, Male.  
+4. How would you extract the ages of male students into a new vector called `male.ages`?  
+5. What is the sum of the ages of the men?  
+```{r}
+
+# Question 1
+student.ages <- data.frame(students=c("Sally", "Tom", "Brian", "Aisha", "Mario"), 
+           ages = c(18, 22, 19, 18, 21))
+
+# Question 2
+student.ages[4,] 
+student.ages$ages[4]
+
+# Question 3
+student.ages$gender <- c("Female", "Male", "Male", "Female", "Male") # i didn't get a chance to talk about what the `$` operator means. you can describe it as a way to access/define a variable in a dataframe.
+
+# Question 4
+student.ages # they can inspect 
+male.ages <- c(22,19,21) # this is one way they can do this - by inspecting the student.ages and then creating a new vector
+
+# a more advanced way - if you want to preview some of what we are going to do next week is to show them how to do this with the dollar operator and a conditional statement
+male.ages <- student.ages$ages[student.ages$gender == "Male"] 
+
+# Question 5
+sum(male.ages) # practice with the sum function
+```
+
+## Loading data from packages
+
+R as well as many packages have built in datasets. Type `mtcars` into the code chunk below to see what happens
+
+```{r packages}
+mtcars
+
+# if have time can go over some functions like `str()` as a preface to data type.
+str(mtcars)
+
+```
+**Question**
+Briefly describe the data in the mtcars dataset. 
+
+From Ismay and Kennedy: 
+You can set many options on a chunk by chunk basis. The most common R chunk options are `echo`, `eval`, and `include`. By default, all three of these options are set to TRUE.
+
+`echo` dictates whether the code that produces the result should be printed before the corresponding R output
+
+`eval` specifies whether the code should be evaluated or just displayed without its output
+
+`include` specifies whether the code AND its output should be included in the resulting knitted document. If it is set to FALSE the code is run, but neither the code or its output are included in the resulting document.
+
+```{r, echo=FALSE}
+# with this chunk you can just show them how to set these options
+
+```
+
+Instead of setting these options individually by chunk you can also edit header or YAML (YAML Ain't Markup Language): knitr::opts_chunk$set(warning = FALSE, message = FALSE). Go back to the YAML header and set these options 
